@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
 
 env:
-  # Path to folder containing pubspec.yaml
   WORKING_DIR: 'learning_tracker'
 
 jobs:
@@ -37,11 +36,16 @@ jobs:
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.builtInKotlin=false" >> android/gradle.properties
 
+      - name: Upgrade Gradle Wrapper Version
+        run: |
+          sed -i 's/gradle-8.10.2-bin.zip/gradle-8.14-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
+          sed -i 's/gradle-8.10.2-all.zip/gradle-8.14-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
+
       - name: Install Project Dependencies
         run: flutter pub get
 
       - name: Build Release APK
-        run: flutter build apk --release --target-platform android-arm64
+        run: flutter build apk --release --target-platform android-arm64 --android-skip-build-dependency-validation
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
