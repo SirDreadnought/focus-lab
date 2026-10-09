@@ -32,6 +32,11 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Inject Gradle Compatibility Flags
+        run: |
+          echo "android.newDsl=false" >> android/gradle.properties
+          echo "android.builtInKotlin=false" >> android/gradle.properties
+
       - name: Install Project Dependencies
         run: flutter pub get
 
