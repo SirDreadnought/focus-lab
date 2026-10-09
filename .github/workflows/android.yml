@@ -31,15 +31,26 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Inject Gradle Compatibility Flags
+      - name: Inject Gradle Compatibility & Desugaring Flags
         run: |
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.builtInKotlin=false" >> android/gradle.properties
 
-      - name: Upgrade Gradle Wrapper Version
+      - name: Upgrade Gradle Wrapper
         run: |
           sed -i 's/gradle-8.10.2-bin.zip/gradle-8.14-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
           sed -i 's/gradle-8.10.2-all.zip/gradle-8.14-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
+
+      - name: Enable Core Library Desugaring
+        run: |
+          # Inject desugaring dependency into build.gradle or build.gradle.kts
+          if [ -f "android/app/build.gradle.kts" ]; then
+            sed -i '/compileOptions {/a \        isCoreLibraryDesugaringEnabled = true' android/app/build.gradle.kts
+            echo 'dependencies { coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4") }' >> android/app/build.gradle.kts
+          elif [ -f "android/app/build.gradle" ]; then
+            sed -i '/compileOptions {/a \        coreLibraryDesugaringEnabled true' android/app/build.gradle
+            echo 'dependencies { coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4" }' >> android/app/build.gradle
+          fi
 
       - name: Install Project Dependencies
         run: flutter pub get
