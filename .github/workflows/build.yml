@@ -1,12 +1,16 @@
-name: Build Android Release APK
+name: Build Cross-Platform Release Apps
 
 on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
 
+# Set the subfolder name where pubspec.yaml lives
+env:
+  SUBFOLDER: 'learning_tracker' # <-- Change this if your subfolder has a different name
+
 jobs:
-  build:
+  build-android:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,13 +28,43 @@ jobs:
           channel: 'stable'
 
       - name: Install dependencies
+        working-directory: ${{ env.SUBFOLDER }}
         run: flutter pub get
 
       - name: Build ARM64 APK
+        working-directory: ${{ env.SUBFOLDER }}
         run: flutter build apk --target-platform android-arm64 --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: focus-lab-arm64-release
-          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          name: focus-lab-android-apk
+          path: ${{ env.SUBFOLDER }}/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Enable Windows Desktop Support
+        run: flutter config --enable-windows-desktop
+
+      - name: Install dependencies
+        working-directory: ${{ env.SUBFOLDER }}
+        run: flutter pub get
+
+      - name: Build Windows Executable
+        working-directory: ${{ env.SUBFOLDER }}
+        run: flutter build windows --release
+
+      - name: Upload Windows Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: focus-lab-windows-x64
+          path: ${{ env.SUBFOLDER }}/build/windows/x64/runner/Release/
